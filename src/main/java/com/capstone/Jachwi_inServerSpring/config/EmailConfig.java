@@ -1,6 +1,8 @@
 package com.capstone.Jachwi_inServerSpring.config;
 
 
+import com.capstone.Jachwi_inServerSpring.resource.EmailResource;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +20,7 @@ public class EmailConfig {
     private String host;
 
     @Value("${spring.mail.port}")
-    private String port;
+    private int port;
 
     @Value("${spring.mail.username}")
     private String username;
@@ -29,12 +31,12 @@ public class EmailConfig {
 
     @Bean
     public JavaMailSender javaMailSender() {
-        JavaMailSenderImpl emailSender = new JavaMailSenderImpl(); //JavaMailSenderImpl는 기존에 있던 class
+        JavaMailSenderImpl emailSender = new JavaMailSenderImpl();
 
-        emailSender.setHost(port);//smtp.naver.com
-        emailSender.setPort(587);
-        emailSender.setUsername(username);
-        emailSender.setPassword(password);
+        emailSender.setHost("smtp.naver.com");
+        emailSender.setPort(EmailResource.getPort());
+        emailSender.setUsername(EmailResource.getUsername());
+        emailSender.setPassword(EmailResource.getUserpwd());
         emailSender.setDefaultEncoding("UTF-8");
         return emailSender;
     }
