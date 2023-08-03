@@ -6,10 +6,10 @@ public class EmailResource {
     }
 
     public static String getUsername() {
-        return "3";
+        return "4";
     }
     public static String getUserpwd() {
-        return "3";
+        return "4";
     }
 
     public static int getPort(){return 587;}
