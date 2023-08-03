@@ -1,7 +1,5 @@
 package com.capstone.Jachwi_inServerSpring.controller;
 
-/*import com.capstone.Jachwi_inServerSpring.service.UserService;
-import com.capstone.Jachwi_inServerSpring.domain.dto.UserJoinRequest;*/
 import com.capstone.Jachwi_inServerSpring.service.impl.EmailServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +25,6 @@ public class UserController {
     String mailConfirm(@PathVariable("email") String email) throws Exception {
         //값 받아 오는 부분 공부하기
         String code = EmailServiceImpl.sendSimpleMessage(email);
-        //String code = EmailServiceImpl.sendSimpleMessage(email);
         System.out.println("인증코드 : " + code);
         return code;
     }

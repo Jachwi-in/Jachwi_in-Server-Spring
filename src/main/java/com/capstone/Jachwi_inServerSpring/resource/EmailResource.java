@@ -1,5 +1,5 @@
-package com.capstone.Jachwi_inServerSpring.resource;
-
-public class EmailResource {
-
-}
+//package com.capstone.Jachwi_inServerSpring.resource;
+//
+//public class EmailResource {
+//
+//}
