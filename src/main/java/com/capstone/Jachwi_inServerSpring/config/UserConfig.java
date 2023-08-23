@@ -21,9 +21,7 @@
 //
 //    //UserConfig에 entityManager 주입하기.
 //
-//
-//
-//private final EntityManager em;
+//    private final EntityManager em;
 //    @Autowired
 //    public UserConfig(EntityManager em){
 //        this.em = em;

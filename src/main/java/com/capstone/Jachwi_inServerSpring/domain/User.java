@@ -1,44 +1,45 @@
-//package com.capstone.Jachwi_inServerSpring.domain;
-//
-//import jakarta.persistence.Entity;
-//import jakarta.persistence.GeneratedValue;
-//import jakarta.persistence.GenerationType;
-//import jakarta.persistence.Id;
-//import lombok.Builder;
-//
-//@Builder // 빌더를 통해 객체를 생성할 수 있다. (lombok 제공 어노테이션)
-//
-////@NoArgsConstructor  이거 두개는 어떤건지 알아보고 없을 경우 어떻게 하는건지 파악하고 사용하던지 하자.
-////@AllArgsConstructor
-//
-//@Entity
-//public class User {
-//    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private String email;
-//    private String password;
-//    private String name;
-//
-//
-//    public String getName() { return name; }
-//
-//    public void setName(String name) {
-//        this.name = name;
-//    }
-//
-//    public String getEmail() {
-//        return email;
-//    }
-//
-//    public void setEmail(String email) {
-//        this.email = email;
-//    }
-//
-//    public String getPassword() {
-//        return password;
-//    }
-//
-//    public void setPassword(String password) {
-//        this.password = password;
-//    }
-//}
-//
+package com.capstone.Jachwi_inServerSpring.domain;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.transaction.annotation.Transactional;
+
+@Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Transactional
+public class User {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String email;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
+    private String nickname;
+
+    @Column
+    private String school;
+
+    @Builder
+    /*빌더 패턴으로 객체를 생성할 수 있도록 합니다.
+    빌더 패턴은 일반적으로 setter나 객체 생성 시 값을 넣어주는 것과 다르게 .userName("name") 같은 방식으로
+    값을 넣을 수 있습니다. 생성자로 객체를 생성하면 순서를 맞춰야하고,
+    setter는 권장하지 않기 때문에 빌더 패턴을 사용하면 좋습니다.*/
+    public User(Long id, String email, String password,
+                String name, String nickname, String school){
+        this.id = id;
+        this.email = email;
+        this.password = password;
+        this.name = name;
+        this.nickname = nickname;
+        this.school = school;
+    }
+}
+

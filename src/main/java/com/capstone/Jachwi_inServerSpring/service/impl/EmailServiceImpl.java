@@ -1,6 +1,7 @@
 package com.capstone.Jachwi_inServerSpring.service.impl;
 
 import com.capstone.Jachwi_inServerSpring.service.EmailService;
+import com.capstone.Jachwi_inServerSpring.service.RedisUtil;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
@@ -12,6 +13,9 @@ import org.springframework.stereotype.Service;
 
 
 import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
 import java.util.concurrent.ThreadLocalRandom;
 
 
@@ -21,6 +25,11 @@ public class EmailServiceImpl implements EmailService {//extends는 클래스 �
 
     @Autowired
     JavaMailSender emailSender;//의존성 주입
+
+    private final RedisUtil redisUtil;
+    public EmailServiceImpl(RedisUtil redisUtil){
+        this.redisUtil = redisUtil;
+    }
 
     private String ePw; //인증번호
 
@@ -42,14 +51,14 @@ public class EmailServiceImpl implements EmailService {//extends는 클래스 �
                 "                        <tbody>\n" +
                 "                            <tr>\n" +
                 "                                <td><h1 style=\"font-size:26px;margin-bottom:0;margin-top:0\">안녕하세요, 회원님.</h1>\n" +
-                "                                    <div style=\"margin-bottom:20px;color:#3c3c3c;font-size:18px\">Jachwi-in에 등록하신 이메일의 검증을 위한 인증번호입니다.</div>\n" +
+                "                                    <div style=\"margin-bottom:20px;color:#3c3c3c;font-size:18px\">자취인에 등록하신 이메일의 검증을 위한 인증번호입니다.</div>\n" +
                 "                                </td>\n" +
                 "                            </tr>\n" +
                 "                            <tr>\n" +
                 "                                <td align=\"center\">\n" +
                 "                                    <div style=\"height:50px;padding-left:20px;padding-right:20px;border:2px solid #13b3af;display:flex;box-sizing:border-box;width:100%\">\n" +
                 "                                        <div style=\"font-size:18px;text-align:center;margin-top:auto;margin-bottom:auto\">"+ePw+"</div>\n" +
-                "                                        <div style=\"font-size:14px;text-align:right;margin-left:auto;margin-top:auto;margin-bottom:auto\">발송된 인증번호는 24시간 유효합니다</div>\n" +
+                "                                        <div style=\"font-size:14px;text-align:right;margin-left:auto;margin-top:auto;margin-bottom:auto\">발송된 인증번호는 10분간 유효합니다</div>\n" +
                 "                                    </div>\n" +
                 "                                </td>\n" +
                 "                            </tr>\n" +
@@ -57,7 +66,7 @@ public class EmailServiceImpl implements EmailService {//extends는 클래스 �
                 "                                <td>\n" +
                 "                                    <div style=\"height:50px;width:480px;display:flex;margin:auto;margin-top:20px;font-size:14px\">\n" +
                 "                                        <div style=\"color:#a42b2b;float:left\">※</div>\n" +
-                "                                        <div style=\"color:#a42b2b;float:left\">인증번호를 요청하지 않았다면 다른 사람이 귀하의 계정을 사용하여 Jachwi-in에 엑세스하려고 시도하는 것일 수 있습니다. 인증번호를 절대 타인과 공유하지 마시길 바랍니다.</div>\n" +
+                "                                        <div style=\"color:#a42b2b;float:left\">인증번호를 요청하지 않았다면 다른 사람이 귀하의 계정을 사용하여 자취인에 엑세스하려고 시도하는 것일 수 있습니다. 인증번호를 절대 타인과 공유하지 마시길 바랍니다.</div>\n" +
                 "                                    </div>\n" +
                 "                                </td>\n" +
                 "                            </tr>\n" +
@@ -83,6 +92,7 @@ public class EmailServiceImpl implements EmailService {//extends는 클래스 �
         // 보내는 사람의 이메일 주소, 보내는 사람 이름
         message.setFrom(new InternetAddress("yongwoo1207@naver.com", "Jachwi-in admin"));// 보내는 사람
 
+        redisUtil.saveAuthCode(to, ePw);
         return message;
     }
 
@@ -97,15 +107,56 @@ public class EmailServiceImpl implements EmailService {//extends는 클래스 �
     // MimeMessage 객체 안에 내가 전송할 메일의 내용을 담는다.
     // 그리고 bean 으로 등록해둔 javaMail 객체를 사용해서 이메일 send!!
     @Override
-    public String sendSimpleMessage(String to) throws Exception {
+    public String sendSimpleMessage(String email) throws Exception {
+        if (redisUtil.existData(email)) {
+            redisUtil.deleteData(email);
+        }
         ePw = createKey();
-        MimeMessage message = createMessage(to); //메일 발송
+        MimeMessage message = createMessage(email); //메일 생성
+
         try { //여긴 예외`처리 그냥 복사해옴.
             emailSender.send(message);
         } catch (MailException es){
             es.printStackTrace();
             throw new IllegalAccessException();
         }
+
         return ePw; // 메일로 보냈던 인증 코드를 서버로 반환
     }
+
+    //중복 확인. 중복이 있다면, true
+    public Boolean verifyEmailCode(String email, String code) {
+        String reuseEmail = redisUtil.getData(email);
+        if (reuseEmail == null) {
+            return false;
+        }
+        return reuseEmail.equals(code);
+    }
+
+
+//    public String makeMemberId(String email) throws NoSuchAlgorithmException {
+//        MessageDigest md = MessageDigest.getInstance("SHA-256");  //해쉬 암호화
+//        md.update(email.getBytes());
+//        md.update(LocalDateTime.now().toString().getBytes());
+//        StringBuilder builder = new StringBuilder();
+//        for (byte b: md.digest()) {
+//            builder.append(String.format("%02x", b));
+//        }
+//        return builder.toString();
+//    }
+    public long makeMemberId(String email) throws NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        md.update(email.getBytes());
+        md.update(LocalDateTime.now().toString().getBytes());
+        byte[] digestBytes = md.digest();
+
+        long memberId = 0;
+        for (int i = 0; i < Math.min(8, digestBytes.length); i++) {
+            memberId |= (digestBytes[i] & 0xFFL) << (8 * i);
+        }
+
+        return memberId;
+    }
+
+
 }

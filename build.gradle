@@ -24,6 +24,7 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'com.h2database:h2'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	annotationProcessor 'org.projectlombok:lombok'
@@ -31,13 +32,10 @@ dependencies {
 
 	//이메일 인증
 	implementation 'org.springframework.boot:spring-boot-starter-mail:3.1.1'
-	//DB - postgresql
-	implementation 'org.postgresql:postgresql:42.6.0'
-	//이메일 인증 redis DB활용
-	implementation 'org.springframework.data:spring-data-redis:3.1.2'
+	//DB - mysql
+	implementation 'mysql:mysql-connector-java:8.0.28'
+	//Redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
 }
 
-tasks.named('test') {
-	useJUnitPlatform()
-}
