@@ -5,6 +5,8 @@ import com.capstone.Jachwi_inServerSpring.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Transactional
 @RequiredArgsConstructor  //이게 뭐하는건지 모르겠다.
 public class UserService {
@@ -34,5 +36,18 @@ public class UserService {
         return "SUCCESS";
     }
 
+    @Transactional
+    public User findByEmail(String email){
+        return userRepository.findByEmail(email).orElseThrow(()->new IllegalArgumentException("해당 사용자가 없습니다."));
+    }
 
+    public String findUserByEmail(String email){
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isPresent()){
+            User user = userOptional.get();
+            return user.getPassword();
+        } else {
+            return "User not found for email: " + email;
+        }
+    }
 }

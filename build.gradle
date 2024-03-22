@@ -36,6 +36,14 @@ dependencies {
 	implementation 'mysql:mysql-connector-java:8.0.28'
 	//Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	//spring security - 로그인에 사용
+	//implementation 'org.springframework.boot:spring-boot-starter-security'
+	//implementation 'org.springframework.security:spring-security-test'
+	//jwt 라이브러리
+	//implementation 'io.jsonwebtoken:jjwt:0.9.1'
 
+	//웹 정책 CORS에 필요한 라이브러리
+	//implementation 'org.springframework.web.filter.CorsFilter'
+	//implementation 'org.springframework:spring-web:5.3.10'
 }
 
