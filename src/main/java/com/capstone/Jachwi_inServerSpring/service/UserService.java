@@ -3,51 +3,20 @@ package com.capstone.Jachwi_inServerSpring.service;
 import com.capstone.Jachwi_inServerSpring.domain.User;
 import com.capstone.Jachwi_inServerSpring.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
-@Transactional
-@RequiredArgsConstructor  //이게 뭐하는건지 모르겠다.
+@Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository userRepository; //중복체크를 위해서 DB 다녀와야 하기에 주입.
+    private final UserRepository userRepository;
 
-    public String checkEmailDuplicate(String email){
-        //userName 중복체크
-        userRepository.findByEmail(email)
-                .ifPresent(user -> {  //ifPresent함수는 optional 클래스에서 제공하는 메소드. Optional 객체가 비어있지 않은 경우에만 동작을 실행한다.
-                    System.out.println("이미 가입된 계정입니다.");
-                    throw new RuntimeException(email + "는 이미 있습니다.");
-                });
-        System.out.println("등록할 수 있는 이메일 입니다.");
-        return "SUCCESS";
-    }
-
-    public String join(String email,String name, String nickname, String password, String school){
-        User user = User.builder()
-                .email(email)
-                .password(password)
-                .name(name)
-                .nickname(nickname)
-                .school(school)
-                .build();
-        userRepository.save(user);
-        return "SUCCESS";
-    }
-
-    @Transactional
-    public User findByEmail(String email){
-        return userRepository.findByEmail(email).orElseThrow(()->new IllegalArgumentException("해당 사용자가 없습니다."));
-    }
-
-    public String findUserByEmail(String email){
-        Optional<User> userOptional = userRepository.findByEmail(email);
-        if (userOptional.isPresent()){
-            User user = userOptional.get();
-            return user.getPassword();
-        } else {
-            return "User not found for email: " + email;
-        }
+    // Main Server는 토큰에서 꺼낸 email로 유저 조회만 담당
+    // 로그인/회원가입은 Auth Server(8081)가 담당
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
     }
 }
