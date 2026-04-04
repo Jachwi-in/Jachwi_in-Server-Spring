@@ -4,6 +4,7 @@ import com.anthropic.client.AnthropicClient;
 import com.anthropic.models.messages.Message;
 import com.anthropic.models.messages.MessageCreateParams;
 import com.anthropic.models.messages.Model;
+import com.capstone.Jachwi_inServerSpring.client.FastApiClient;
 import com.capstone.Jachwi_inServerSpring.domain.Building;
 import com.capstone.Jachwi_inServerSpring.domain.dto.PostClassifyRequestDto;
 import com.capstone.Jachwi_inServerSpring.domain.dto.RoomRecommendRequestDto;
@@ -19,6 +20,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -28,6 +30,7 @@ public class LlmService {
 
     private final AnthropicClient anthropicClient;
     private final MapService mapService;
+    private final FastApiClient fastApiClient;
     private final StringRedisTemplate redisTemplate;
 
     private static final String CLASSIFY_CACHE_PREFIX = "llm:classify:";
@@ -69,23 +72,51 @@ public class LlmService {
             return cached;
         }
 
-        // DB에서 주변 건물 조회
-        List<Building> buildings = mapService.getBuildingsInArea(
-                dto.getCenterX() - dto.getRadius(), dto.getCenterX() + dto.getRadius(),
-                dto.getCenterY() - dto.getRadius(), dto.getCenterY() + dto.getRadius()
-        );
+        // 1순위: FastAPI 벡터 검색 (사용자 조건 자연어 → 유사 건물)
+        String searchQuery = buildSearchQuery(dto);
+        List<Map<String, Object>> vectorBuildings = fastApiClient.searchBuildings(searchQuery, 10);
 
-        if (buildings.isEmpty()) {
+        // FastAPI 장애 시 DB 좌표 범위 검색으로 폴백
+        List<Map<String, Object>> candidates;
+        if (!vectorBuildings.isEmpty()) {
+            log.info("[LLM] FastAPI 벡터 검색 결과 {}건 사용", vectorBuildings.size());
+            candidates = vectorBuildings;
+        } else {
+            log.info("[LLM] FastAPI 폴백 — DB 좌표 범위 검색 사용");
+            List<Building> dbBuildings = mapService.getBuildingsInArea(
+                    dto.getCenterX() - dto.getRadius(), dto.getCenterX() + dto.getRadius(),
+                    dto.getCenterY() - dto.getRadius(), dto.getCenterY() + dto.getRadius()
+            );
+            if (dbBuildings.isEmpty()) {
+                return "해당 지역에서 검색된 매물이 없습니다.";
+            }
+            candidates = dbBuildings.stream()
+                    .limit(10)
+                    .map(b -> Map.<String, Object>of(
+                            "시도명", b.getProvince() != null ? b.getProvince() : "",
+                            "시군구", b.getDistrict() != null ? b.getDistrict() : "",
+                            "도로명", b.getStreetName() != null ? b.getStreetName() : "",
+                            "편의점", b.getConvenienceStore(),
+                            "카페", b.getCafe(),
+                            "CCTV", b.getCctv(),
+                            "버스정류장", b.getBusStop(),
+                            "학교_거리", b.getSchoolDistance(),
+                            "가로등", b.getStreetLight()
+                    ))
+                    .toList();
+        }
+
+        if (candidates.isEmpty()) {
             return "해당 지역에서 검색된 매물이 없습니다.";
         }
 
-        // 상위 10개만 프롬프트에 포함 (토큰 절약)
-        String buildingList = buildings.stream()
-                .limit(10)
-                .map(b -> "- 주소: %s %s %s, 편의점: %d, 카페: %d, CCTV: %d, 버스정류장: %d, 학교거리: %.0fm, 가로등: %d"
-                        .formatted(b.getProvince(), b.getDistrict(), b.getStreetName(),
-                                b.getConvenienceStore(), b.getCafe(), b.getCctv(),
-                                b.getBusStop(), b.getSchoolDistance(), b.getStreetLight()))
+        String buildingList = candidates.stream()
+                .map(b -> "- 주소: %s %s %s, 편의점: %s, 카페: %s, CCTV: %s, 버스정류장: %s, 학교거리: %sm, 가로등: %s"
+                        .formatted(
+                                b.getOrDefault("시도명", ""), b.getOrDefault("시군구", ""), b.getOrDefault("도로명", ""),
+                                b.getOrDefault("편의점", 0), b.getOrDefault("카페", 0), b.getOrDefault("CCTV", 0),
+                                b.getOrDefault("버스정류장", 0), b.getOrDefault("학교_거리", 0), b.getOrDefault("가로등", 0)
+                        ))
                 .collect(Collectors.joining("\n"));
 
         String prefs = dto.getPreferences() == null || dto.getPreferences().isEmpty()
@@ -108,6 +139,16 @@ public class LlmService {
         String result = callClaude(prompt, 1024);
         saveCache(cacheKey, result);
         return result;
+    }
+
+    // ─────────────────────────────────────────────
+    // FastAPI 검색 쿼리 생성
+    // ─────────────────────────────────────────────
+    private String buildSearchQuery(RoomRecommendRequestDto dto) {
+        String prefs = (dto.getPreferences() == null || dto.getPreferences().isEmpty())
+                ? "편의시설 무관"
+                : String.join(", ", dto.getPreferences());
+        return "%s 근처 자취방, 선호시설: %s".formatted(dto.getSchool(), prefs);
     }
 
     // ─────────────────────────────────────────────

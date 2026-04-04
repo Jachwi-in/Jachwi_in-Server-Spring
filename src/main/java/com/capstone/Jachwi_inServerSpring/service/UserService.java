@@ -1,22 +1,21 @@
 package com.capstone.Jachwi_inServerSpring.service;
 
-import com.capstone.Jachwi_inServerSpring.domain.User;
-import com.capstone.Jachwi_inServerSpring.repository.UserRepository;
+import com.capstone.Jachwi_inServerSpring.client.AuthServerClient;
+import com.capstone.Jachwi_inServerSpring.client.UserInfoDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository userRepository;
+    private final AuthServerClient authServerClient;
 
-    // Main Server는 토큰에서 꺼낸 email로 유저 조회만 담당
-    // 로그인/회원가입은 Auth Server(8081)가 담당
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+    /**
+     * JWT에서 꺼낸 email로 Auth Server에서 사용자 정보 조회
+     * (Main Server는 users 테이블에 직접 접근하지 않음)
+     */
+    public UserInfoDto getUserByEmail(String email) {
+        return authServerClient.getUserByEmail(email);
     }
 }
