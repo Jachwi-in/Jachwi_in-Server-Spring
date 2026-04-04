@@ -30,8 +30,8 @@ public class SecurityConfig {
                                 "/api/v1/users/join/**",
                                 "/api/v1/users/login"
                         ).permitAll()
-                        .requestMatchers("/api/v1/map/**").permitAll()  // 지도는 비로그인도 조회 가능
-                        // 나머지는 모두 JWT 인증 필요
+                        .requestMatchers("/api/v1/map/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/posts/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
