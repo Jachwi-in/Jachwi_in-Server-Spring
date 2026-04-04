@@ -83,9 +83,9 @@ public class LlmService {
         String buildingList = buildings.stream()
                 .limit(10)
                 .map(b -> "- 주소: %s %s %s, 편의점: %d, 카페: %d, CCTV: %d, 버스정류장: %d, 학교거리: %.0fm, 가로등: %d"
-                        .formatted(b.get시도명(), b.get시군구(), b.get도로명(),
-                                b.get편의점(), b.get카페(), b.getCCTV(),
-                                b.get버스정류장(), b.get학교_거리(), b.get가로등()))
+                        .formatted(b.getProvince(), b.getDistrict(), b.getStreetName(),
+                                b.getConvenienceStore(), b.getCafe(), b.getCctv(),
+                                b.getBusStop(), b.getSchoolDistance(), b.getStreetLight()))
                 .collect(Collectors.joining("\n"));
 
         String prefs = dto.getPreferences() == null || dto.getPreferences().isEmpty()

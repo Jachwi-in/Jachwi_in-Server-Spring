@@ -1,59 +1,80 @@
 package com.capstone.Jachwi_inServerSpring.domain;
 
-import com.capstone.Jachwi_inServerSpring.domain.cpk.BuildingCpk;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.io.Serializable;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Transactional
-@Table
-@IdClass(BuildingCpk.class)
-public class Building implements Serializable {
+@Table(name = "building", indexes = {
+        @Index(name = "idx_building_xy", columnList = "x, y")
+})
+public class Building {
 
     @Id
-    private double x;
-    @Id
-    private double y;
-    @Column
-    private String 시도명;
-    @Column
-    private String 시군구;
-    @Column
-    private String 법정읍면동명;
-    @Column
-    private String 도로명;
-    @Column
-    private int 건물본번;
-    @Column
-    private int 건물부번;
-    @Column
-    private String 건축물대장_건물명;
-    @Column
-    private String 상세건물명;
-    @Column
-    private String 시군구용_건물명;
-    @Column
-    private int 버스정류장;
-    @Column
-    private int 편의점;
-    @Column
-    private int 카페;
-    @Column
-    private int 가로등;
-    @Column
-    private int CCTV;
-    @Column
-    private double 학교_거리;
-    @Column
-    private int 병원;
-    @Column
-    private int 식당;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
+    // 좌표 (경도, 위도)
+    @Column(nullable = false)
+    private Double x;
+
+    @Column(nullable = false)
+    private Double y;
+
+    // 주소 정보 - 기존 DB 컬럼명(한글) 유지
+    @Column(name = "시도명")
+    private String province;
+
+    @Column(name = "시군구")
+    private String district;
+
+    @Column(name = "법정읍면동명")
+    private String neighborhood;
+
+    @Column(name = "도로명")
+    private String streetName;
+
+    @Column(name = "건물본번")
+    private Integer buildingMainNo;
+
+    @Column(name = "건물부번")
+    private Integer buildingSubNo;
+
+    @Column(name = "건축물대장_건물명")
+    private String officialBuildingName;
+
+    @Column(name = "상세건물명")
+    private String detailBuildingName;
+
+    @Column(name = "시군구용_건물명")
+    private String localBuildingName;
+
+    // 주변 시설 수
+    @Column(name = "버스정류장")
+    private Integer busStop;
+
+    @Column(name = "편의점")
+    private Integer convenienceStore;
+
+    @Column(name = "카페")
+    private Integer cafe;
+
+    @Column(name = "가로등")
+    private Integer streetLight;
+
+    @Column(name = "CCTV")
+    private Integer cctv;
+
+    @Column(name = "병원")
+    private Integer hospital;
+
+    @Column(name = "식당")
+    private Integer restaurant;
+
+    // 학교까지의 거리 (미터)
+    @Column(name = "학교_거리")
+    private Double schoolDistance;
 }
