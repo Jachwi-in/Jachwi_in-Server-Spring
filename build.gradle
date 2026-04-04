@@ -36,9 +36,7 @@ dependencies {
 	implementation 'mysql:mysql-connector-java:8.0.28'
 	//Redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-	//Kafka
-	implementation 'org.springframework.kafka:spring-kafka'
-	//Claude API (Anthropic Java SDK)
+//Claude API (Anthropic Java SDK)
 	implementation 'com.anthropic:anthropic-java:2.17.0'
 	//spring security + jwt
 	implementation 'org.springframework.boot:spring-boot-starter-security'
