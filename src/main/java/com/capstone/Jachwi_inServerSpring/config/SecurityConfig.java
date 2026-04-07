@@ -31,6 +31,7 @@ public class SecurityConfig {
                                 "/api/v1/users/login"
                         ).permitAll()
                         .requestMatchers("/api/v1/map/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/apt-trade/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/posts/**").permitAll()
                         .anyRequest().authenticated()
                 )

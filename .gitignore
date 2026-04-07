@@ -44,3 +44,4 @@ src/main/java/com/capstone/Jachwi_inServerSpring/resource/RedisResorce.java
 #이메일 비밀번호 보안을 위해 gitignore 등록!
 # Claude Code
 .claude/
+.env
